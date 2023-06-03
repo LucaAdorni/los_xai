@@ -15,6 +15,16 @@ with open("repo_info.txt", "r") as repo_info:
   
 print(path_to_repo)
 
+
+pd.options.display.max_columns = 200
+pd.options.display.max_rows = 1000
+pd.set_option('max_info_columns', 200)
+pd.set_option('expand_frame_repr', False)
+pd.set_option('expand_frame_repr', True)
+pd.set_option('max_colwidth',1000)
+pd.set_option('display.width',None)
+pd.set_option('display.float_format', lambda x: '%.3f' % x)
+
 path_to_data = f"{path_to_repo}data/"
 path_to_raw = f"{path_to_data}raw/"
 path_to_processed = f"{path_to_data}processed/"
@@ -84,7 +94,7 @@ store = [['LOS (Binary)', "", f"{int(val1)} ({perc1}%)", f"{int(val2)} ({perc2}%
 for col in tqdm(cat_cols):
     if col == 'los_cat': continue
     count_mod = 0
-    for mod in df[col].unique().tolist():
+    for mod in sorted(df[col].unique().tolist()):
         # Now compute the descriptive table
         sub = df.loc[df[col] == mod]
         val1 = sub.loc[(sub.los_cat == True)].shape[0]
@@ -99,6 +109,9 @@ for col in tqdm(cat_cols):
         count_mod += 1
         
 store = pd.DataFrame(store, columns = ['Variable', 'Modality', 'PLOS', 'RLOS'])
+
+store.Modality.replace({'EMERGENCY': 'emergency', 'URGENT':'urgent', 'ELECTIVE': 'elective',
+                        'SINGLE': 'single', 'WIDOWED': 'widowed'}, inplace = True)
 
 store.to_csv(f"{path_to_tables}descriptive_stat_categorical{death_tag}.csv", index = False)
 
@@ -115,5 +128,6 @@ for col in tqdm(num_cols):
     store.append([col, f"{round(mean1,2)} ({round(std1,2)})", f"{round(mean2,2)} ({round(std2,2)})"])
         
 store = pd.DataFrame(store, columns = ['Variable', 'PLOS', 'RLOS'])
+store.sort_values(by = ['Variable'], inplace = True)
 
 store.to_csv(f"{path_to_tables}descriptive_stat_numerical{death_tag}.csv", index = False)
